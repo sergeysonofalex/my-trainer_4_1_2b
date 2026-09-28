@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Смена костюма персонажа. Вложенные циклы — тренажёр (Scratch, 4 класс)</title>
+<style>
+/* ============ БАЗА ============ */
+:root{
+  --blue:#4C97FF;
+  --blue-d:#3373CC;
+  --orange:#FFAB19;
+  --orange-d:#C07E0C;
+  --green:#5CB85C;
+  --green-d:#3E8C3E;
+  --red:#E84C4C;
+  --purple:#9966FF;
+  --bg:#1E1E2F;
+  --panel:#2B2B45;
+  --panel2:#37375A;
+  --line:#4A4A78;
+  --text:#FFFFFF;
+  --muted:#B9B9E0;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;}
+body{
+  margin:0;
+  background:radial-gradient(circle at 15% -10%, #2C2C52 0%, #1E1E2F 55%) fixed;
+  color:var(--text);
+  font-family:'Segoe UI','Trebuchet MS',Verdana,system-ui,sans-serif;
+  font-size:17px;
+  -webkit-user-select:none; user-select:none;
+  padding-bottom:50px;
+}
+
+/* ============ ШАПКА ============ */
+header{
+  position:sticky; top:0; z-index:500;
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:8px 16px;
+  background:linear-gradient(180deg,#2A2A4A,#1E1E2F);
+  border-bottom:3px solid var(--blue);
+  box-shadow:0 6px 18px rgba(0,0,0,.55);
+}
+.brand{
+  font-size:20px; font-weight:900; color:var(--orange);
+  line-height:1.1; margin-right:auto;
+  text-shadow:0 1px 0 rgba(0,0,0,.55);
+}
+.brand span{display:block; font-size:13px; font-weight:700; color:#9C9CD0; text-shadow:none; margin-top:2px;}
+nav{display:flex; flex-wrap:wrap; gap:5px;}
+.nav-btn{
+  font:inherit; font-size:15px; font-weight:800;
+  padding:7px 11px; border-radius:10px;
+  border:2px solid #5A5A8C; background:#33334F; color:#DDD;
+  cursor:pointer; transition:.15s;
+}
+.nav-btn:hover{background:#3F3F66; transform:translateY(-1px);}
+.nav-btn.active{
+  background:var(--blue); border-color:#9CC8FF; color:#fff;
+  box-shadow:0 0 14px rgba(76,151,255,.75);
+}
+.nav-btn.full{border-color:var(--green); box-shadow:0 0 10px rgba(92,184,92,.7);}
+.score-box{
+  font-size:18px; font-weight:900; color:#FFE07A;
+  background:#33334F; border:2px solid var(--orange);
+  border-radius:12px; padding:6px 14px; white-space:nowrap;
+}
+.btn{
+  font:inherit; font-size:18px; font-weight:900;
+  padding:7px 16px; border-radius:12px; border:none;
+  cursor:pointer; color:#fff; transition:.12s;
+  white-space:nowrap;
+}
+.btn-green{background:var(--green); box-shadow:0 4px 0 var(--green-d);}
+.btn-orange{background:var(--orange); box-shadow:0 4px 0 var(--orange-d); color:#3A2600;}
+.btn:active{transform:translateY(3px); box-shadow:none;}
+
+/* ============ ОСНОВНОЕ ============ */
+main{padding:16px 20px; max-width:1400px; margin:0 auto;}
+.task{display:none; animation:fade .25s ease;}
+.task.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+.task-title{font-size:26px; margin:0 0 4px; color:#fff; line-height:1.15;}
+.hint{font-size:16px; color:var(--muted); margin:0 0 14px; line-height:1.35;}
+.col-title{font-size:19px; font-weight:900; color:var(--orange); margin-bottom:8px;}
+
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start;}
+@media (max-width:900px){ .two-col{grid-template-columns:1fr;} }
+
+/* ============ DROP-ЗОНЫ ============ */
+.dropzone{
+  border:2px dashed #55557A;
+  border-radius:14px;
+  transition:background .15s, border-color .15s, box-shadow .15s;
+}
+.dropzone.over{
+  border-color:var(--orange);
+  background:rgba(255,171,25,.16);
+  box-shadow:0 0 0 4px rgba(255,171,25,.22);
+}
+.pool{
+  display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start;
+  padding:12px; min-height:90px;
+  background:rgba(255,255,255,.045);
+}
+.pool.over{background:rgba(255,171,25,.12);}
+
+/* ============ КАРТОЧКИ ============ */
+.card{
+  padding:9px 14px;
+  border-radius:11px;
+  font-size:17px;
+  font-weight:700;
+  line-height:1.25;
+  background:#3D3D63;
+  border:2px solid #6C6CA8;
+  cursor:grab;
+  touch-action:none;
+  max-width:100%;
+  transition:transform .12s, box-shadow .12s;
+  position:relative;
+}
+.card:hover{transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.45);}
+.card.dragging{opacity:.3;}
+.ghost{
+  position:fixed; z-index:9999; pointer-events:none;
+  opacity:.95; transform:rotate(-1.5deg) scale(1.03);
+  box-shadow:0 12px 28px rgba(0,0,0,.7);
+  cursor:grabbing;
+}
+.card.term{background:rgba(76,151,255,.22); border-color:var(--blue); color:#DCEBFF;}
+.card.stmt{background:rgba(153,102,255,.20); border-color:var(--purple); color:#EBE1FF;}
+.card.scheme{background:rgba(76,151,255,.20); border-color:var(--blue); color:#DCEBFF;}
+.card.step{background:rgba(255,171,25,.18); border-color:var(--orange); color:#FFE9C2;}
+.card.block{font-weight:800;}
+.blk-motion{background:var(--blue); border-color:var(--blue-d); color:#fff;}
+.blk-looks{background:var(--purple); border-color:#774DCB; color:#fff;}
+.blk-control{background:var(--orange); border-color:var(--orange-d); color:#3A2600;}
+.blk-hat{background:#FFBF00; border-color:#CC9900; color:#3A2600; border-radius:18px 18px 11px 11px;}
+
+/* ============ ЗОНЫ-ОПРЕДЕЛЕНИЯ ============ */
+.zones{display:flex; flex-direction:column; gap:11px;}
+.zone{
+  background:var(--panel);
+  padding:11px 14px;
+  border-radius:14px;
+  display:flex; flex-direction:column; gap:7px;
+  min-height:86px;
+}
+.zone .slot{min-height:44px; display:flex; align-items:center; flex-wrap:wrap; gap:7px;}
+.zone .def{font-size:16px; color:#CFCFEF; line-height:1.3;}
+
+/* ============ КОРЗИНЫ ============ */
+.baskets{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px;}
+@media (max-width:900px){ .baskets{grid-template-columns:1fr;} }
+.basket{
+  background:var(--panel); border-radius:16px; padding:12px;
+  min-height:200px; display:flex; flex-direction:column; gap:10px;
+}
+.basket-title{font-size:19px; font-weight:900; color:var(--orange); text-align:center;}
+.basket-body{
+  display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start;
+  min-height:90px; flex:1; padding:8px; border-radius:11px;
+}
+
+/* ============ ИСТИНА / ЛОЖЬ ============ */
+.tf-row{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px;}
+@media (max-width:900px){ .tf-row{grid-template-columns:1fr;} }
+.tf-zone{background:var(--panel); border-radius:16px; padding:12px; min-height:220px;}
+.tf-title{font-size:22px; font-weight:900; text-align:center; margin-bottom:9px;}
+.tf-zone[data-key="true"] .tf-title{color:var(--green);}
+.tf-zone[data-key="false"] .tf-title{color:var(--red);}
+.tf-zone .slot{display:flex; flex-direction:column; gap:9px; min-height:70px;}
+
+/* ============ ПОРЯДОК ============ */
+.order-slots{display:flex; flex-direction:column; gap:11px; margin-top:18px;}
+.order-slot{flex-direction:row; align-items:center; gap:12px;}
+.order-slot .num{
+  font-size:22px; font-weight:900; color:#1E1E2F; background:var(--orange);
+  width:44px; height:44px; min-width:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+.order-slot .slot{flex:1; min-height:46px;}
+
+/* ============ ОКНО СКРИПТА ============ */
+.script-slots{display:flex; flex-direction:column; gap:10px; margin-top:18px;}
+.script-slot{
+  display:flex; flex-direction:row; align-items:center; gap:12px;
+  background:#111122; border-radius:14px; padding:8px 12px;
+}
+.script-slot .num{
+  font-size:20px; font-weight:900; color:#1E1E2F; background:var(--orange);
+  width:40px; height:40px; min-width:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+.script-slot .slot{
+  flex:1; min-height:48px;
+  display:flex; align-items:center; gap:7px;
+}
+.script-slot .slot .card{width:100%; text-align:left; cursor:grab;}
+
+/* Подсказка внутри пустого слота */
+.script-slot .slot:empty::before{
+  content: attr(data-hint);
+  color: #6A6A9A;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+/* ============ ОТМЕТКИ ПРОВЕРКИ ============ */
+.ok{
+  background:#1E5C2E !important; border-color:var(--green) !important;
+  box-shadow:0 0 0 4px rgba(92,184,92,.45) !important;
+}
+.bad{
+  background:#5C1E1E !important; border-color:var(--red) !important;
+  box-shadow:0 0 0 4px rgba(232,76,76,.45) !important;
+}
+.missed{border-color:var(--red) !important; border-style:dashed !important;}
+
+/* ============ ИТОГ ============ */
+.final-box{
+  text-align:center; background:var(--panel); border-radius:22px;
+  padding:36px 28px; max-width:800px; margin:20px auto;
+  border:4px solid var(--green);
+  box-shadow:0 0 50px rgba(92,184,92,.35);
+}
+.final-emoji{font-size:80px; line-height:1;}
+.final-box h2{font-size:32px; margin:8px 0;}
+.final-box p{font-size:20px; color:#CFCFEF; margin:8px 0;}
+.final-box .btn{margin-top:18px; font-size:22px; padding:12px 30px;}
+
+/* ============ ТОСТ ============ */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translate(-50%,140%);
+  background:var(--green); color:#fff; font-size:20px; font-weight:900;
+  padding:12px 26px; border-radius:14px;
+  box-shadow:0 10px 26px rgba(0,0,0,.6);
+  transition:transform .35s ease; z-index:1000; pointer-events:none;
+  max-width:90vw; text-align:center;
+}
+.toast.show{transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">🎭 Смена костюма персонажа
+    <span>Вложенные циклы · Scratch · 4 класс</span>
+  </div>
+  <nav id="nav"></nav>
+  <div class="score-box">⭐ <span id="score">0</span> / 25</div>
+  <button class="btn btn-green" id="btnCheck">✔ Проверить</button>
+  <button class="btn btn-orange" id="btnReset">↺ Сбросить</button>
+</header>
+
+<main id="main"></main>
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   ДАННЫЕ ЗАДАНИЙ
+   ========================================================= */
+const DATA1 = [
+  {key:'suit',   term:'Костюм',          def:'Один из образов спрайта. Их смена создаёт эффект анимации.'},
+  {key:'outer',  term:'Внешний цикл',    def:'Главный цикл, который запускает внутренний цикл много раз.'},
+  {key:'inner',  term:'Внутренний цикл', def:'Цикл, который находится внутри другого цикла.'},
+  {key:'sprite', term:'Спрайт',          def:'Персонаж программы: он двигается, говорит и меняет костюмы.'}
+];
+
+/* --- ИСПРАВЛЕНО: убран несуществующий блок "повторить до...".
+       В Scratch есть цикл "повторять пока не ...". --- */
+const T2_BLOCKS = [
+  {text:'следующий костюм',        cat:'view', cls:'blk-looks'},
+  {text:'повторить 10 раз',        cat:'loop', cls:'blk-control'},
+  {text:'изменить костюм на...',   cat:'view', cls:'blk-looks'},
+  {text:'всегда',                  cat:'loop', cls:'blk-control'},
+  {text:'перейти в x:0 y:0',       cat:'view', cls:'blk-motion'},
+  {text:'повторять пока не ...',   cat:'loop', cls:'blk-control'}
+];
+
+const T3_STMT = [
+  {text:'Вложенный цикл — это цикл внутри другого цикла.', truth:'true'},
+  {text:'Внутренний цикл начинает работу только после полного завершения внешнего цикла.', truth:'false'},
+  {text:'Смена костюмов создаёт эффект анимации движения персонажа.', truth:'true'}
+];
+
+const T4_STEPS = [
+  {order:1, text:'Запуск внешнего цикла'},
+  {order:2, text:'Запуск внутреннего цикла'},
+  {order:3, text:'Смена костюма и пауза'},
+  {order:4, text:'Переход к следующему шагу внешнего цикла'}
+];
+
+const T5_ITEMS = [
+  {key:'6',  scheme:'Внешний цикл (2) × Внутренний цикл (3)', ans:'6 смен костюма'},
+  {key:'8',  scheme:'Внешний цикл (4) × Внутренний цикл (2)', ans:'8 смен костюма'},
+  {key:'15', scheme:'Внешний цикл (3) × Внутренний цикл (5)', ans:'15 смен костюма'}
+];
+
+/* Задание 6 — упрощённые блоки и подсказки */
+const T6_BLOCKS = [
+  {key:'start', text:'Старт',             cls:'blk-hat',     order:1},
+  {key:'outer', text:'Повторить 4 раза',  cls:'blk-control', order:2},
+  {key:'inner', text:'Повторить 3 раза',  cls:'blk-control', order:3},
+  {key:'next',  text:'Следующий костюм',  cls:'blk-looks',   order:4},
+  {key:'wait',  text:'Подождать',         cls:'blk-control', order:5}
+];
+
+const T6_HINTS = [
+  'Старт — с чего начинаем',
+  'Внешний цикл — сколько раз повторить всё',
+  'Внутренний цикл — сколько раз повторить внутри',
+  'Действие — что делает спрайт',
+  'Пауза — чтобы анимация была плавной'
+];
+
+/* =========================================================
+   СОСТОЯНИЕ
+   ========================================================= */
+const MAX = {1:4, 2:6, 3:3, 4:4, 5:3, 6:5};
+const TOTAL_MAX = 25;
+const taskScores  = {1:0,2:0,3:0,4:0,5:0,6:0};
+const taskChecked = {1:false,2:false,3:false,4:false,5:false,6:false};
+let current = 1;
+
+/* =========================================================
+   УТИЛИТЫ
+   ========================================================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function sumScores(){
+  return Object.values(taskScores).reduce((a,b)=>a+b,0);
+}
+
+/* =========================================================
+   DRAG & DROP (pointer events)
+   ========================================================= */
+let drag = null;
+let overZone = null;
+
+function attachDrag(el){
+  el.addEventListener('pointerdown', onPointerDown);
+}
+
+function onPointerDown(e){
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  const el = e.currentTarget;
+  e.preventDefault();
+
+  const rect = el.getBoundingClientRect();
+  const ghost = el.cloneNode(true);
+  ghost.classList.add('ghost');
+  ghost.style.width  = rect.width + 'px';
+  ghost.style.height = rect.height + 'px';
+  ghost.style.left   = rect.left + 'px';
+  ghost.style.top    = rect.top + 'px';
+  document.body.appendChild(ghost);
+
+  drag = {el, ghost, dx: e.clientX - rect.left, dy: e.clientY - rect.top};
+  el.classList.add('dragging');
+
+  window.addEventListener('pointermove', onPointerMove, {passive:false});
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+}
+
+function onPointerMove(e){
+  if(!drag) return;
+  e.preventDefault();
+  drag.ghost.style.left = (e.clientX - drag.dx) + 'px';
+  drag.ghost.style.top  = (e.clientY - drag.dy) + 'px';
+  setOver(zoneUnder(e.clientX, e.clientY, drag.el));
+}
+
+function onPointerUp(e){
+  if(!drag) return;
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+
+  const {el, ghost} = drag;
+  ghost.remove();
+  el.classList.remove('dragging');
+
+  const x = (e.clientX === undefined) ? -1 : e.clientX;
+  const y = (e.clientY === undefined) ? -1 : e.clientY;
+  const zone = (x < 0) ? null : zoneUnder(x, y, el);
+  setOver(null);
+  drag = null;
+
+  if(!zone) return;
+
+  const slot = zone.querySelector('.slot') || zone;
+
+  if(zone.classList.contains('single')){
+    const existing = slot.firstElementChild;
+    if(existing && existing !== el) returnToSource(existing);
+    if(el.parentElement !== slot){ slot.appendChild(el); afterChange(el.dataset.task); }
+    return;
+  }
+
+  if(el.parentElement !== slot){ slot.appendChild(el); afterChange(el.dataset.task); }
+}
+
+function zoneUnder(x, y, item){
+  const e = document.elementFromPoint(x, y);
+  if(!e) return null;
+  const z = e.closest('.dropzone');
+  if(!z) return null;
+  if(z.dataset.task !== item.dataset.task) return null;
+  return z;
+}
+
+function setOver(z){
+  if(overZone === z) return;
+  if(overZone) overZone.classList.remove('over');
+  overZone = z;
+  if(overZone) overZone.classList.add('over');
+}
+
+function returnToSource(el){
+  const src = document.getElementById(el.dataset.source);
+  if(src) src.appendChild(el);
+}
+
+function afterChange(taskId){
+  clearMarks(taskId);
+  taskScores[taskId] = 0;
+  taskChecked[taskId] = false;
+  updateScore();
+  updateNavState();
+}
+
+/* =========================================================
+   СОЗДАНИЕ КАРТОЧКИ
+   ========================================================= */
+function makeCard(opts){
+  const c = document.createElement('div');
+  c.className = 'card ' + (opts.cls || '');
+  c.dataset.task = opts.task;
+  if(opts.key !== undefined) c.dataset.key = opts.key;
+  c.dataset.source = opts.source;
+  if(opts.extra){
+    for(const k in opts.extra) c.dataset[k] = opts.extra[k];
+  }
+  c.textContent = opts.text;
+  attachDrag(c);
+  return c;
+}
+
+/* =========================================================
+   ПОСТРОЕНИЕ ВСЕХ ЗАДАНИЙ
+   ========================================================= */
+function buildAll(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  /* ---------- ЗАДАНИЕ 1 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task1';
+    sec.innerHTML = `
+      <h2 class="task-title">🔤 Задание 1. Термин → определение</h2>
+      <p class="hint">Перетащи карточку с термином в окошко с подходящим определением.
+      За каждое верное соответствие — 1 балл (максимум 4).</p>
+      <div class="two-col">
+        <div>
+          <div class="col-title">Термины</div>
+          <div class="pool dropzone" id="src1" data-task="1"></div>
+        </div>
+        <div>
+          <div class="col-title">Определения</div>
+          <div class="zones" id="zones1"></div>
+        </div>
+      </div>`;
+    const pool = sec.querySelector('#src1');
+    DATA1.forEach(t => pool.appendChild(
+      makeCard({task:'1', key:t.key, text:t.term, cls:'term', source:'src1'})
+    ));
+    const zones = sec.querySelector('#zones1');
+    shuffle(DATA1).forEach(t => {
+      const z = document.createElement('div');
+      z.className = 'zone dropzone single';
+      z.dataset.task = '1';
+      z.dataset.key = t.key;
+      z.innerHTML = `<div class="slot"></div><div class="def">${t.def}</div>`;
+      zones.appendChild(z);
+    });
+    main.appendChild(sec);
+  }
+
+  /* ---------- ЗАДАНИЕ 2 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task2';
+    sec.innerHTML = `
+      <h2 class="task-title">🧺 Задание 2. Разложи блоки Scratch по корзинам</h2>
+      <p class="hint">Перетащи каждый блок в нужную корзину. За каждый верный — 1 балл (максимум 6).</p>
+      <div class="pool dropzone" id="src2" data-task="2"></div>
+      <div class="baskets">
+        <div class="basket dropzone" data-task="2" data-cat="view">
+          <div class="basket-title">🏃 Блоки движения и внешнего вида</div>
+          <div class="basket-body slot"></div>
+        </div>
+        <div class="basket dropzone" data-task="2" data-cat="loop">
+          <div class="basket-title">🔁 Блоки управления (циклы)</div>
+          <div class="basket-body slot"></div>
+        </div>
+      </div>`;
+    const pool = sec.querySelector('#src2');
+    shuffle(T2_BLOCKS).forEach(b => pool.appendChild(
+      makeCard({task:'2', text:b.text, cls:'block ' + b.cls, source:'src2', extra:{cat:b.cat}})
+    ));
+    main.appendChild(sec);
+  }
+
+  /* ---------- ЗАДАНИЕ 3 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task3';
+    sec.innerHTML = `
+      <h2 class="task-title">⚖️ Задание 3. Верно или неверно?</h2>
+      <p class="hint">Перетащи каждое утверждение в зону «ИСТИНА» или «ЛОЖЬ». Максимум 3 балла.</p>
+      <div class="pool dropzone" id="src3" data-task="3"></div>
+      <div class="tf-row">
+        <div class="tf-zone dropzone" data-task="3" data-key="true">
+          <div class="tf-title">✅ ИСТИНА</div>
+          <div class="slot"></div>
+        </div>
+        <div class="tf-zone dropzone" data-task="3" data-key="false">
+          <div class="tf-title">❌ ЛОЖЬ</div>
+          <div class="slot"></div>
+        </div>
+      </div>`;
+    const pool = sec.querySelector('#src3');
+    shuffle(T3_STMT).forEach(s => pool.appendChild(
+      makeCard({task:'3', text:s.text, cls:'stmt', source:'src3', extra:{truth:s.truth}})
+    ));
+    main.appendChild(sec);
+  }
+
+  /* ---------- ЗАДАНИЕ 4 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task4';
+    sec.innerHTML = `
+      <h2 class="task-title">🔢 Задание 4. Установи порядок работы вложенного цикла</h2>
+      <p class="hint">Перетащи шаги алгоритма в правильном порядке: от 1 до 4. Максимум 4 балла.</p>
+      <div class="pool dropzone" id="src4" data-task="4"></div>
+      <div class="order-slots" id="slots4"></div>`;
+    const pool = sec.querySelector('#src4');
+    shuffle(T4_STEPS).forEach(s => pool.appendChild(
+      makeCard({task:'4', text:s.text, cls:'step', source:'src4', extra:{order:s.order}})
+    ));
+    const slots = sec.querySelector('#slots4');
+    for(let i = 1; i <= 4; i++){
+      const z = document.createElement('div');
+      z.className = 'zone dropzone single order-slot';
+      z.dataset.task = '4';
+      z.dataset.index = i;
+      z.innerHTML = `<div class="num">${i}</div><div class="slot"></div>`;
+      slots.appendChild(z);
+    }
+    main.appendChild(sec);
+  }
+
+  /* ---------- ЗАДАНИЕ 5 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task5';
+    sec.innerHTML = `
+      <h2 class="task-title">🧮 Задание 5. Сколько раз сменится костюм?</h2>
+      <p class="hint">Перетащи схему циклов к правильному ответу. Максимум 3 балла.</p>
+      <div class="two-col">
+        <div>
+          <div class="col-title">Схема циклов</div>
+          <div class="pool dropzone" id="src5" data-task="5"></div>
+        </div>
+        <div>
+          <div class="col-title">Результат</div>
+          <div class="zones" id="zones5"></div>
+        </div>
+      </div>`;
+    const pool = sec.querySelector('#src5');
+    shuffle(T5_ITEMS).forEach(t => pool.appendChild(
+      makeCard({task:'5', key:t.key, text:t.scheme, cls:'scheme', source:'src5'})
+    ));
+    const zones = sec.querySelector('#zones5');
+    shuffle(T5_ITEMS).forEach(t => {
+      const z = document.createElement('div');
+      z.className = 'zone dropzone single';
+      z.dataset.task = '5';
+      z.dataset.key = t.key;
+      z.innerHTML = `<div class="slot"></div><div class="def">🎯 ${t.ans}</div>`;
+      zones.appendChild(z);
+    });
+    main.appendChild(sec);
+  }
+
+  /* ---------- ЗАДАНИЕ 6 ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'task6';
+    sec.innerHTML = `
+      <h2 class="task-title">🧩 Задание 6. Собери скрипт анимации ходьбы</h2>
+      <p class="hint">
+        Перетащи блоки в пронумерованные окошки. В каждом окошке есть подсказка, что там должно быть.
+        Максимум 5 баллов.
+      </p>
+      <div class="two-col">
+        <div>
+          <div class="col-title">Блоки</div>
+          <div class="pool dropzone" id="src6" data-task="6"></div>
+        </div>
+        <div>
+          <div class="col-title">Окно скрипта (сверху вниз)</div>
+          <div class="script-slots" id="slots6"></div>
+        </div>
+      </div>`;
+    const pool = sec.querySelector('#src6');
+    shuffle(T6_BLOCKS).forEach(b => pool.appendChild(
+      makeCard({
+        task:'6', key:b.key, text:b.text,
+        cls:'block ' + b.cls, source:'src6',
+        extra:{order:b.order}
+      })
+    ));
+    const slots = sec.querySelector('#slots6');
+    for(let i = 1; i <= 5; i++){
+      const z = document.createElement('div');
+      z.className = 'script-slot dropzone single';
+      z.dataset.task = '6';
+      z.dataset.index = i;
+      z.innerHTML = `<div class="num">${i}</div><div class="slot" data-hint="${T6_HINTS[i-1]}"></div>`;
+      slots.appendChild(z);
+    }
+    main.appendChild(sec);
+  }
+
+  /* ---------- ИТОГОВЫЙ СЛАЙД ---------- */
+  {
+    const sec = document.createElement('section');
+    sec.className = 'task';
+    sec.id = 'final';
+    sec.innerHTML = `
+      <div class="final-box">
+        <div class="final-emoji">🎉</div>
+        <h2 id="finalTitle">Молодец!</h2>
+        <p>Твой результат: <b id="finalScore">0</b> из <b>${TOTAL_MAX}</b> баллов</p>
+        <p id="finalMsg"></p>
+        <button class="btn btn-green" id="btnAgain">🔄 Пройти снова</button>
+      </div>`;
+    sec.querySelector('#btnAgain').addEventListener('click', restart);
+    main.appendChild(sec);
+  }
+}
+
+/* =========================================================
+   ПРОВЕРКА
+   ========================================================= */
+function clearMarks(id){
+  const sec = document.getElementById('task' + id);
+  if(!sec) return;
+  sec.querySelectorAll('.ok,.bad,.missed').forEach(e =>
+    e.classList.remove('ok','bad','missed')
+  );
+}
+
+function checkTask(id){
+  const sec = document.getElementById('task' + id);
+  if(!sec) return 0;
+  clearMarks(id);
+  let correct = 0;
+
+  if(id === 1 || id === 5){
+    const sel = (id === 1) ? '#zones1 .zone' : '#zones5 .zone';
+    sec.querySelectorAll(sel).forEach(z => {
+      const card = z.querySelector('.slot').firstElementChild;
+      if(!card){ z.classList.add('missed'); return; }
+      if(card.dataset.key === z.dataset.key){ card.classList.add('ok'); correct++; }
+      else card.classList.add('bad');
+    });
+  }
+
+  if(id === 2){
+    sec.querySelectorAll('.basket').forEach(b => {
+      b.querySelectorAll('.card').forEach(c => {
+        if(c.dataset.cat === b.dataset.cat){ c.classList.add('ok'); correct++; }
+        else c.classList.add('bad');
+      });
+    });
+  }
+
+  if(id === 3){
+    sec.querySelectorAll('.tf-zone').forEach(z => {
+      z.querySelectorAll('.card').forEach(c => {
+        if(c.dataset.truth === z.dataset.key){ c.classList.add('ok'); correct++; }
+        else c.classList.add('bad');
+      });
+    });
+  }
+
+  if(id === 4){
+    sec.querySelectorAll('.order-slot').forEach(z => {
+      const card = z.querySelector('.slot').firstElementChild;
+      if(!card){ z.classList.add('missed'); return; }
+      if(Number(card.dataset.order) === Number(z.dataset.index)){
+        card.classList.add('ok'); correct++;
+      } else card.classList.add('bad');
+    });
+  }
+
+  if(id === 6){
+    sec.querySelectorAll('.script-slot').forEach(z => {
+      const card = z.querySelector('.slot').firstElementChild;
+      if(!card){ z.classList.add('missed'); return; }
+      if(Number(card.dataset.order) === Number(z.dataset.index)){
+        card.classList.add('ok'); correct++;
+      } else card.classList.add('bad');
+    });
+  }
+
+  taskScores[id] = correct;
+  taskChecked[id] = true;
+  updateScore();
+  updateNavState();
+
+  toast(`Задание ${id}: ${correct} из ${MAX[id]} ${plural(correct)}`);
+
+  if([1,2,3,4,5,6].every(i => taskChecked[i])){
+    setTimeout(() => toast('Все задания проверены! Нажми «🏁 Итог»', 3500), 1800);
+  }
+  return correct;
+}
+
+function plural(n){
+  if(n % 10 === 1 && n % 100 !== 11) return 'балл';
+  if([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'балла';
+  return 'баллов';
+}
+
+/* =========================================================
+   СБРОС
+   ========================================================= */
+function resetTask(id){
+  const sec = document.getElementById('task' + id);
+  if(!sec) return;
+  sec.querySelectorAll('.card').forEach(c => returnToSource(c));
+  clearMarks(id);
+  taskScores[id] = 0;
+  taskChecked[id] = false;
+  updateScore();
+  updateNavState();
+  toast('Задание ' + id + ' сброшено');
+}
+
+function restart(){
+  [1,2,3,4,5,6].forEach(i => { taskScores[i] = 0; taskChecked[i] = false; });
+  updateScore();
+  buildAll();
+  updateNavState();
+  showTask(1);
+  toast('Начинаем заново! Удачи! 🚀');
+}
+
+/* =========================================================
+   ИНТЕРФЕЙС
+   ========================================================= */
+function updateScore(){
+  document.getElementById('score').textContent = sumScores();
+}
+
+function updateNavState(){
+  document.querySelectorAll('.nav-btn[data-nav]').forEach(b => {
+    const n = Number(b.dataset.nav);
+    if(!n) return;
+    b.classList.toggle('full', taskScores[n] === MAX[n]);
+  });
+}
+
+function showTask(id){
+  current = id;
+  document.querySelectorAll('.task').forEach(s => s.classList.remove('active'));
+  const sec = document.getElementById(id === 'final' ? 'final' : 'task' + id);
+  if(sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', String(b.dataset.nav) === String(id));
+  });
+  if(id === 'final') updateFinal();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateFinal(){
+  const total = sumScores();
+  const fs = document.getElementById('finalScore');
+  const ft = document.getElementById('finalTitle');
+  const fm = document.getElementById('finalMsg');
+  if(!fs) return;
+  fs.textContent = total;
+
+  if(total >= 24){
+    ft.textContent = 'Великолепно! Ты мастер вложенных циклов! 🏆';
+    fm.textContent = 'Ты отлично разбираешься в костюмах, спрайтах и циклах Scratch. Так держать!';
+  } else if(total >= 18){
+    ft.textContent = 'Очень хорошо! 👏';
+    fm.textContent = 'Почти всё верно! Вернись к заданиям, где были ошибки, и получишь максимум.';
+  } else if(total >= 10){
+    ft.textContent = 'Хорошее начало! 💪';
+    fm.textContent = 'Ты уже много знаешь. Пройди тренажёр ещё раз — вложенные циклы станут твоими друзьями!';
+  } else {
+    ft.textContent = 'Не сдавайся! 🌟';
+    fm.textContent = 'Разбери задания вместе с учителем и попробуй снова — всё обязательно получится!';
+  }
+}
+
+/* Тост-уведомление */
+let toastTimer = null;
+function toast(msg, dur){
+  dur = dur || 2200;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+/* =========================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ========================================================= */
+(function init(){
+  buildAll();
+
+  const nav = document.getElementById('nav');
+  for(let i = 1; i <= 6; i++){
+    const b = document.createElement('button');
+    b.className = 'nav-btn';
+    b.dataset.nav = i;
+    b.textContent = 'Задание ' + i;
+    b.addEventListener('click', () => showTask(i));
+    nav.appendChild(b);
+  }
+  const fb = document.createElement('button');
+  fb.className = 'nav-btn';
+  fb.dataset.nav = 'final';
+  fb.textContent = '🏁 Итог';
+  fb.addEventListener('click', () => showTask('final'));
+  nav.appendChild(fb);
+
+  document.getElementById('btnCheck').addEventListener('click', () => {
+    if(current === 'final'){ toast('Это итоговый слайд 👍'); return; }
+    checkTask(current);
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    if(current === 'final'){ restart(); return; }
+    resetTask(current);
+  });
+
+  updateScore();
+  updateNavState();
+  showTask(1);
+})();
+</script>
+</body>
+</html>
